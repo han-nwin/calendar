@@ -10,6 +10,8 @@ interface Props {
 
 export function ScheduleView({ members, onDelete }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [confirmName, setConfirmName] = useState("");
 
   if (members.length === 0) {
     return (
@@ -84,13 +86,60 @@ export function ScheduleView({ members, onDelete }: Props) {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => handleDelete(member.id)}
-                disabled={deletingId === member.id}
-                className="text-xs text-muted hover:text-danger transition-colors cursor-pointer"
-              >
-                {deletingId === member.id ? "..." : "Remove"}
-              </button>
+              {confirmingId === member.id ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={confirmName}
+                    onChange={(e) => setConfirmName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && confirmName === member.name) {
+                        handleDelete(member.id);
+                        setConfirmingId(null);
+                        setConfirmName("");
+                      } else if (e.key === "Escape") {
+                        setConfirmingId(null);
+                        setConfirmName("");
+                      }
+                    }}
+                    placeholder={`Type "${member.name}"`}
+                    autoFocus
+                    className="w-32 bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground placeholder:text-muted/50 focus:outline-none focus:border-danger transition-colors"
+                  />
+                  <button
+                    onClick={() => {
+                      if (confirmName === member.name) {
+                        handleDelete(member.id);
+                        setConfirmingId(null);
+                        setConfirmName("");
+                      }
+                    }}
+                    disabled={confirmName !== member.name || deletingId === member.id}
+                    className="text-xs text-danger disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {deletingId === member.id ? "..." : "Confirm"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConfirmingId(null);
+                      setConfirmName("");
+                    }}
+                    className="text-xs text-muted hover:text-foreground cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setConfirmingId(member.id);
+                    setConfirmName("");
+                  }}
+                  className="text-xs text-muted hover:text-danger transition-colors cursor-pointer"
+                >
+                  Remove
+                </button>
+              )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {member.availability.map((avail) => (
